@@ -1,0 +1,20 @@
+{
+    "name": "real-time-chat",
+    "version": "1.0.0",
+    "description": "Real-time chat application",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js"
+    },
+    "dependencies": {
+        "bcrypt": "^5.0.1",
+        "express": "^4.17.1",
+        "jsonwebtoken": "^9.0.2",
+        "nodemon": "^3.1.7",
+        "real-time-chat": "file:",
+        "socket.io": "^4.4.1"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC"
+}

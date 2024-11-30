@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Chat App</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+       
+</head>
+<body>
+    <div class="auth-container" id="authContainer">
+        <div class="auth-form">
+            <h2>Login / Register</h2>
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button onclick="login()">Login</button>
+            <button onclick="register()">Register</button>
+        </div>
+    </div>
+
+    <button class="theme-toggle" onclick="toggleTheme()">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <div class="container">
+        <div class="sidebar">
+            <h2>Active Users</h2>
+            <div class="active-users" id="activeUsers"></div>
+        </div>
+
+        <div class="main-chat">
+            <div class="chat-header">
+                <h2>Chat Room</h2>
+                <span id="onlineCount">0 online</span>
+            </div>
+
+            <div class="messages-container" id="messagesContainer"></div>
+
+            <div class="typing-indicator" id="typingIndicator"></div>
+
+            <div class="input-container">
+                <input type="text" id="messageInput" placeholder="Type a message...">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let socket = io();
+        let currentUser = null;
+        let typingTimeout = null;
+
+        // Authentication functions
+        async function register() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+                if (data.token) {
+                    localStorage.setItem('token', data.token);
+                    currentUser = username;
+                    document.getElementById('authContainer').style.display = 'none';
+                    connectToSocket();
+                }
+            } catch (error) {
+                alert('Registration failed');
+            }
+        }
+
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+                if (data.token) {
+                    localStorage.setItem('token', data.token);
+                    currentUser = username;
+                    document.getElementById('authContainer').style.display = 'none';
+                    connectToSocket();
+                }
+            } catch (error) {
+                alert('Login failed');
+            }
+        }
+
+        // Socket connection
+        function connectToSocket() {
+            socket.emit('user_connected', currentUser);
+        }
+
+        // Message handling
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+
+            if (message) {
+                socket.emit('send_message', { text: message });
+                input.value = '';
+            }
+        }
+
+        // Typing indicator
+        function handleTyping() {
+            socket.emit('typing');
+            
+            if (typingTimeout) {
+                clearTimeout(typingTimeout);
+            }
+
+            typingTimeout = setTimeout(() => {
+                socket.emit('stop_typing');
+            }, 1000);
+        }
+
+        // Theme toggle
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const icon = document.querySelector('.theme-toggle i');
+            icon.classList.toggle('fa-moon');
+            icon.classList.toggle('fa-sun');
+        }
+
+        // Socket event listeners
+        socket.on('load_messages', (messages) => {
+            const container = document.getElementById('messagesContainer');
+            container.innerHTML = messages.map(msg => createMessageElement(msg)).join('');
+            container.scrollTop = container.scrollHeight;
+        });
+
+        socket.on('new_message', (message) => {
+            const container = document.getElementById('messagesContainer');
+            container.insertAdjacentHTML('beforeend', createMessageElement(message));
+            container.scrollTop = container.scrollHeight;
+        });
+
+        socket.on('active_users', (users) => {
+            const container = document.getElementById('activeUsers');
+            document.getElementById('onlineCount').textContent = `${users.length} online`;
+            
+            container.innerHTML = users.map(user => `
+                <div class="user-item online">
+                    <span class="online-indicator"></span>
+                    <span>${user}</span>
+                </div>
+            `).join('');
+        });
+
+        socket.on('user_typing', (username) => {
+            document.getElementById('typingIndicator').textContent = `${username} is typing...`;
+        });
+
+        socket.on('user_stop_typing', () => {
+            document.getElementById('typingIndicator').textContent = '';
+        });
+
+        socket.on('user_joined', (username) => {
+            const container = document.getElementById('messagesContainer');
+            container.insertAdjacentHTML('beforeend', `
+                <div class="message system">
+                    ${username} joined the chat
+                </div>
+            `);
+        });
+
+        socket.on('user_left', (username) => {
+            const container = document.getElementById('messagesContainer');
+            container.insertAdjacentHTML('beforeend', `
+                <div class="message system">
+                    ${username} left the chat
+                </div>
+            `);
+        });
+
+        // Helper functions
+        function createMessageElement(message) {
+            const messageClass = message.user === currentUser ? 'sent' : 'received';
+            return `
+                <div class="message ${messageClass}">
+                    <strong>${message.user}</strong>
+                    <p>${message.text}</p>
+                    <small>${new Date(message.timestamp).toLocaleTimeString()}</small>
+                </div>
+            `;
+        }
+
+        // Event listeners
+        document.getElementById('messageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+            handleTyping();
+        });
+
+        // Check authentication on load
+        window.onload = () => {
+            const token = localStorage.getItem('token');
+            if (token) {
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    currentUser = payload.username;
+                    document.getElementById('authContainer').style.display = 'none';
+                    connectToSocket();
+                } catch (error) {
+                    localStorage.removeItem('token');
+                }
+            }
+        };
+    </script>
+</body>
+</html>

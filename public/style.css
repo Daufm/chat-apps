@@ -1,0 +1,246 @@
+:root {
+    --primary-color: #2196f3;
+    --secondary-color: #1976d2;
+    --background-light: #ffffff;
+    --background-dark: #121212;
+    --text-light: #333333;
+    --text-dark: #ffffff;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--background-light);
+    color: var(--text-light);
+    transition: all 0.3s ease;
+}
+
+body.dark-mode {
+    background: var(--background-dark);
+    color: var(--text-dark);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    display: flex;
+    gap: 20px;
+    height: 100vh;
+}
+
+.auth-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.auth-form {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.sidebar {
+    width: 250px;
+    background: #f5f5f5;
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.dark-mode .sidebar {
+    background: #1e1e1e;
+}
+
+.main-chat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.dark-mode .main-chat {
+    background: #2d2d2d;
+}
+
+.chat-header {
+    padding: 20px;
+    background: var(--primary-color);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.messages-container {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.message {
+    max-width: 70%;
+    padding: 10px 15px;
+    border-radius: 15px;
+    margin: 5px 0;
+    word-wrap: break-word;
+}
+
+.message.received {
+    background: #e9ecef;
+    align-self: flex-start;
+}
+
+.message.sent {
+    background: var(--primary-color);
+    color: white;
+    align-self: flex-end;
+}
+
+.dark-mode .message.received {
+    background: #3d3d3d;
+}
+
+.input-container {
+    padding: 20px;
+    background: #f8f9fa;
+    display: flex;
+    gap: 10px;
+}
+
+.dark-mode .input-container {
+    background: #1e1e1e;
+}
+
+input, button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    outline: none;
+}
+
+input {
+    flex: 1;
+    background: white;
+}
+
+.dark-mode input {
+    background: #2d2d2d;
+    color: white;
+}
+
+button {
+    background: var(--primary-color);
+    color: white;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+button:hover {
+    background: var(--secondary-color);
+}
+
+.active-users {
+    margin-top: 20px;
+}
+
+.user-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 5px 0;
+}
+
+.user-item.online {
+    background: #e8f5e9;
+}
+
+.dark-mode .user-item.online {
+    background: #1b5e20;
+}
+
+.online-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #4caf50;
+}
+
+.typing-indicator {
+    padding: 10px;
+    font-style: italic;
+    color: #666;
+}
+
+.dark-mode .typing-indicator {
+    color: #aaa;
+}
+
+.theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: white;
+    cursor: pointer;
+    z-index: 100;
+}
+
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+    }
+
+    .message {
+        max-width: 85%;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.message {
+    animation: slideIn 0.3s ease;
+}
+
+.user-item {
+    animation: fadeIn 0.3s ease;
+}
