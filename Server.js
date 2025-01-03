@@ -20,6 +20,7 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+const secret = 'helloWorld';
 // Authentication endpoints
 app.post('/api/register', async (req, res) => {
     try {
@@ -31,7 +32,7 @@ app.post('/api/register', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
         users.set(username, hashedPassword);
         
-        const token = jwt.sign({ username }, 'your_jwt_secret');
+        const token = jwt.sign({ username }, secret);
         res.json({ token });
     } catch (error) {
         res.status(500).json({ error: 'Server error' });
